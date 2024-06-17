@@ -1,0 +1,43 @@
+三种消息传递语义：
+at least once：每条消息会被收到1次或多次。例如发送方S在超时时间内没有收到接收方R的通知（如ack），或者收到了R的报错，就会不断重发消息直至R传回ack。
+at most once：每条消息会被收到0次或1次。也就是说S只负责向R发送消息，R也没有任何通知机制。无论R最终是否收到，S都不会重发。
+exactly once：是上面两个的综合，保证S发送的每一条消息，R都会“不重不漏”地恰好收到1次。它是最强最精确的语义，也最难实现。
+
+
+端到端的exactly once语义，是输入、处理逻辑、输出三部分协同作用的结果。Flink内部依托 检查点机制和轻量级分布式快照算法ABS保证exactly once。
+实现精确一次的输出逻辑，则需要两种限制之一：幂等性写入（idempotent write）、事务性写入（transactional write）。
+
+                              。
+两阶段提交（two-phase commit, 2PC）是最基础的分布式一致性协议.
+在分布式系统中，为了让每个节点都能够感知到其他节点的事务执行状况，需要引入一个中心节点来统一处理所有节点的执行逻辑，这个中心节点叫做协调者（coordinator），被中心节点调度的其他业务节点叫做参与者（participant）。
+
+2PC将分布式事务分成了两个阶段，两个阶段分别为提交请求（投票）和提交（执行）。协调者根据参与者的响应来决定是否需要真正地执行事务，具体流程如下。
+一，提交请求（投票）阶段
+  协调者向所有参与者发送prepare请求与事务内容，询问是否可以准备事务提交，并等待参与者的响应。
+  参与者执行事务中包含的操作，并记录undo日志（用于回滚）和redo日志（用于重放），但不真正提交。
+  参与者向协调者返回事务操作的执行结果，执行成功返回yes，否则返回no。
+二，提交（执行）阶段
+  分为成功与失败两种情况:
+  1. 若所有参与者都返回yes，说明事务可以提交：
+    协调者向所有参与者发送commit请求。
+    参与者收到commit请求后，将事务真正地提交上去，并释放占用的事务资源，并向协调者返回ack。
+    协调者收到所有参与者的ack消息，事务成功完成。
+  2. 有参与者返回no或者超时未返回，说明事务中断，需要回滚：
+    协调者向所有参与者发送rollback请求。
+    参与者收到rollback请求后，根据undo日志回滚到事务执行前的状态，释放占用的事务资源，并向协调者返回ack。
+    协调者收到所有参与者的ack消息，事务回滚完成。
+
+Flink中提供了基于2PC的SinkFunction，名为TwoPhaseCommitSinkFunction，定义了如下4个抽象方法，需要子类实现：
+  beginTransaction()：开始一个事务，返回事务信息的句柄。
+  preCommit()：预提交（即提交请求）阶段的逻辑。
+  commit()：正式提交阶段的逻辑。
+  abort()：取消事务。
+
+具体步骤如下：
+1. 开始事务 beginTransaction, 会调用createTransactionalProducer()生成包含事务ID的producer。
+2. 预提交阶段, 会调用kafkaProducer的flush方法
+3. 提交阶段，代理KafkaProducer.commitTransaction()方法，正式向Kafka提交事务。该方法的调用点位于TwoPhaseCommitSinkFunction.notifyCheckpointComplete()方法中。当所有检查点都成功完成之后，会回调这个方法。
+
+
+
+

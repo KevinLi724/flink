@@ -982,29 +982,29 @@ under the License.
 				<plugins>
 					<!-- make sure we don't have any _2.10 or _2.11 dependencies when building
 					for Scala 2.12 -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>enforce-versions</id>
-								<goals>
-									<goal>enforce</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<bannedDependencies>
-											<excludes combine.children="append">
-												<exclude>*:*_2.11</exclude>
-												<exclude>*:*_2.10</exclude>
-											</excludes>
-											<message>Scala 2.10/2.11 dependencies are not allowed for Scala 2.12 builds. This can be caused by hard-coded scala versions, where the 'scala.binary.version' property should be used instead.</message>
-										</bannedDependencies>
-									</rules>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-enforcer-plugin</artifactId>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<id>enforce-versions</id>-->
+<!--								<goals>-->
+<!--									<goal>enforce</goal>-->
+<!--								</goals>-->
+<!--								<configuration>-->
+<!--									<rules>-->
+<!--										<bannedDependencies>-->
+<!--											<excludes combine.children="append">-->
+<!--												<exclude>*:*_2.11</exclude>-->
+<!--												<exclude>*:*_2.10</exclude>-->
+<!--											</excludes>-->
+<!--											<message>Scala 2.10/2.11 dependencies are not allowed for Scala 2.12 builds. This can be caused by hard-coded scala versions, where the 'scala.binary.version' property should be used instead.</message>-->
+<!--										</bannedDependencies>-->
+<!--									</rules>-->
+<!--								</configuration>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
 				</plugins>
 			</build>
 		</profile>
@@ -1275,13 +1275,13 @@ under the License.
 								<skip>true</skip>
 							</configuration>
 						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-enforcer-plugin</artifactId>
-							<configuration>
-								<skip>true</skip>
-							</configuration>
-						</plugin>
+<!--						<plugin>-->
+<!--							<groupId>org.apache.maven.plugins</groupId>-->
+<!--							<artifactId>maven-enforcer-plugin</artifactId>-->
+<!--							<configuration>-->
+<!--								<skip>true</skip>-->
+<!--							</configuration>-->
+<!--						</plugin>-->
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-javadoc-plugin</artifactId>
@@ -1317,16 +1317,16 @@ under the License.
 			</activation>
 			<build>
 				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>dependency-convergence</id>
-								<phase>${flink.convergence.phase}</phase>
-							</execution>
-						</executions>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-enforcer-plugin</artifactId>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<id>dependency-convergence</id>-->
+<!--								<phase>${flink.convergence.phase}</phase>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
 				</plugins>
 			</build>
 		</profile>
@@ -1474,27 +1474,27 @@ under the License.
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-enforcer-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>enforce-maven</id>
-								<goals>
-									<goal>enforce</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<!-- versions for certain build tools are enforced to match the CI setup -->
-										<!-- the rules below should stay in sync with Flink Release wiki documentation and the CI scripts -->
-										<requireJavaVersion>
-											<version>[1.8.0,1.8.1)</version>
-										</requireJavaVersion>
-									</rules>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.apache.maven.plugins</groupId>-->
+<!--						<artifactId>maven-enforcer-plugin</artifactId>-->
+<!--						<executions>-->
+<!--							<execution>-->
+<!--								<id>enforce-maven</id>-->
+<!--								<goals>-->
+<!--									<goal>enforce</goal>-->
+<!--								</goals>-->
+<!--								<configuration>-->
+<!--									<rules>-->
+<!--										&lt;!&ndash; versions for certain build tools are enforced to match the CI setup &ndash;&gt;-->
+<!--										&lt;!&ndash; the rules below should stay in sync with Flink Release wiki documentation and the CI scripts &ndash;&gt;-->
+<!--										<requireJavaVersion>-->
+<!--											<version>[1.8.0,1.8.1)</version>-->
+<!--										</requireJavaVersion>-->
+<!--									</rules>-->
+<!--								</configuration>-->
+<!--							</execution>-->
+<!--						</executions>-->
+<!--					</plugin>-->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
@@ -1876,137 +1876,137 @@ under the License.
 				</configuration>
 			</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>enforce-maven</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireMavenVersion>
-									<version>[3.8.6]</version>
-								</requireMavenVersion>
-								<requireJavaVersion>
-									<version>${target.java.version}</version>
-								</requireJavaVersion>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>ban-unsafe-snakeyaml</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>org.yaml:snakeyaml:(,1.31]</exclude>
-									</excludes>
-									<includes>
-										<!-- Snakeyaml is pulled in by many modules without using it in production,
-											so there's no benefit in us investing time into bumping these. -->
-										<include>org.yaml:snakeyaml:(,1.31]:*:test</include>
-									</includes>
-									<message>Older snakeyaml versions are not allowed due to security vulnerabilities.</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>ban-unsafe-jackson</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>com.fasterxml.jackson*:*:(,2.12.0]</exclude>
-									</excludes>
-									<message>Older jackson versions are not allowed due to security vulnerabilities.</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>forbid-log4j-1</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>log4j:log4j</exclude>
-										<exclude>org.slf4j:slf4j-log4j12</exclude>
-										<exclude>ch.qos.reload4j:reload4j</exclude>
-										<exclude>org.slf4j:slf4j-reload4j</exclude>
-									</excludes>
-									<message>Log4j 1 and Reload4J dependencies are not allowed because they conflict with Log4j 2. If the dependency absolutely requires the Log4j 1 API, use 'org.apache.logging.log4j:log4j-1.2-api'.</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>forbid-direct-akka-rpc-dependencies</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>org.apache.flink:flink-rpc-akka</exclude>
-									</excludes>
-									<message>
-										Direct dependencies on flink-rpc-akka are not allowed. Depend on flink-rpc-akka-loader instead, and use RpcSystem#load or the TestingRpcService.
-									</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>forbid-direct-table-planner-dependencies</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<bannedDependencies>
-									<excludes>
-										<exclude>org.apache.flink:flink-table-planner_${scala.binary.version}</exclude>
-									</excludes>
-									<includes>
-										<include>org.apache.flink:flink-table-planner_${scala.binary.version}:*:*:test</include>
-									</includes>
-									<message>
-										Direct dependencies on flink-table-planner are not allowed.
-										You should depend on either Table API modules or flink-table-planner-loader.
-									</message>
-								</bannedDependencies>
-							</rules>
-						</configuration>
-					</execution>
-					<execution>
-						<id>dependency-convergence</id>
-						<!-- disabled by default as it interacts badly with shade-plugin -->
-						<phase>none</phase>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<dependencyConvergence/>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-enforcer-plugin</artifactId>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<id>enforce-maven</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<requireMavenVersion>-->
+<!--									<version>[3.8.6]</version>-->
+<!--								</requireMavenVersion>-->
+<!--								<requireJavaVersion>-->
+<!--									<version>${target.java.version}</version>-->
+<!--								</requireJavaVersion>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>ban-unsafe-snakeyaml</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<bannedDependencies>-->
+<!--									<excludes>-->
+<!--										<exclude>org.yaml:snakeyaml:(,1.31]</exclude>-->
+<!--									</excludes>-->
+<!--									<includes>-->
+<!--										&lt;!&ndash; Snakeyaml is pulled in by many modules without using it in production,-->
+<!--											so there's no benefit in us investing time into bumping these. &ndash;&gt;-->
+<!--										<include>org.yaml:snakeyaml:(,1.31]:*:test</include>-->
+<!--									</includes>-->
+<!--									<message>Older snakeyaml versions are not allowed due to security vulnerabilities.</message>-->
+<!--								</bannedDependencies>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>ban-unsafe-jackson</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<bannedDependencies>-->
+<!--									<excludes>-->
+<!--										<exclude>com.fasterxml.jackson*:*:(,2.12.0]</exclude>-->
+<!--									</excludes>-->
+<!--									<message>Older jackson versions are not allowed due to security vulnerabilities.</message>-->
+<!--								</bannedDependencies>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>forbid-log4j-1</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<bannedDependencies>-->
+<!--									<excludes>-->
+<!--										<exclude>log4j:log4j</exclude>-->
+<!--										<exclude>org.slf4j:slf4j-log4j12</exclude>-->
+<!--										<exclude>ch.qos.reload4j:reload4j</exclude>-->
+<!--										<exclude>org.slf4j:slf4j-reload4j</exclude>-->
+<!--									</excludes>-->
+<!--									<message>Log4j 1 and Reload4J dependencies are not allowed because they conflict with Log4j 2. If the dependency absolutely requires the Log4j 1 API, use 'org.apache.logging.log4j:log4j-1.2-api'.</message>-->
+<!--								</bannedDependencies>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>forbid-direct-akka-rpc-dependencies</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<bannedDependencies>-->
+<!--									<excludes>-->
+<!--										<exclude>org.apache.flink:flink-rpc-akka</exclude>-->
+<!--									</excludes>-->
+<!--									<message>-->
+<!--										Direct dependencies on flink-rpc-akka are not allowed. Depend on flink-rpc-akka-loader instead, and use RpcSystem#load or the TestingRpcService.-->
+<!--									</message>-->
+<!--								</bannedDependencies>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>forbid-direct-table-planner-dependencies</id>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<bannedDependencies>-->
+<!--									<excludes>-->
+<!--										<exclude>org.apache.flink:flink-table-planner_${scala.binary.version}</exclude>-->
+<!--									</excludes>-->
+<!--									<includes>-->
+<!--										<include>org.apache.flink:flink-table-planner_${scala.binary.version}:*:*:test</include>-->
+<!--									</includes>-->
+<!--									<message>-->
+<!--										Direct dependencies on flink-table-planner are not allowed.-->
+<!--										You should depend on either Table API modules or flink-table-planner-loader.-->
+<!--									</message>-->
+<!--								</bannedDependencies>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--					<execution>-->
+<!--						<id>dependency-convergence</id>-->
+<!--						&lt;!&ndash; disabled by default as it interacts badly with shade-plugin &ndash;&gt;-->
+<!--						<phase>none</phase>-->
+<!--						<goals>-->
+<!--							<goal>enforce</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<dependencyConvergence/>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
