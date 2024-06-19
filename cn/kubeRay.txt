@@ -1,0 +1,50 @@
+ray启动的细节
+https://www.superheaoz.top/2021/05/6715/
+
+1. 通过ray start 启动，将命令行参数封装到rayparams对象中，通过参数--head区分当前创建的node对象
+Node对象初始化时，会调用其他脚本创建相应的服务，比如raylet，gcs等
+2. head node启动会拉起如下关键进程：
+    monitor监控集群资源，自动扩容
+    gcs服务，存储元信息，暴露grpc服务
+        c++实现的grpc服务，有一个gcs_serverStart方法
+        1. 初始化kvManager，比如redis，管理kv数据
+        2. 构建GcsTableStorage，保存job_table,actor,actor task spec.存储在kvManager中
+        3.初始化clusteresourcescheduler对象，管理整个集群资源，提供updatenode，removenode接口
+            调度策略：spread策略
+                    通过数组维护node id列表，从小到大排序
+                    每次调度从哪个node开始的索引
+                    对索引 % 数组长度，遍历所有的node寻找合适的node
+3. worker node
+    初始化gcs rpc客户端
+    从gcs获取node info
+raylet进程启动细节
+  初始化gcs cient和node manager（负责节点上资源调度，cpu内存，负责处理任务的声明周期）
+  nodemanager内部有ObjectManager：管理ray对象存储的对象，任务生成新的对象，由objectmanager处理
+  workerpool：管理工作进程的池，创建和销毁工作进程，为新的任务分配进程
+  GCS client，同步信息
+同时创建一个accept，监听请求。
+
+
+
+Ray cluster 的基本架构：
+节点是虚拟的概念，比如在 K8s 集群上，每个节点对应一个 pod。
+head节点: Ray cluster 的调度中心，有 GCS 存储集群节点的信息、作业信息、actor 的信息等等
+worker节点: 承载具体的工作负载。
+每个节点上有一个 raylet 守护进程，一个本地调度器，负责 task 的调度以及 worker 的管理，
+同时 raylet 中还有 object store 组件，负责节点之间 object 的传输，
+所有 object store 构成一个分布式内存。
+
+直接物理机托管Ray集群存在的问题：
+1. head和worker直接通过ip和port链接，集群拉起和节点增删比较复杂
+2. k8s生态监控，报警能力无法利用
+
+KubeRay 采用了经典的 operator 设计，提供了 RayCluster，RayJob，RayService 这三个 CRD：
+RayCluster：负责 Ray 集群的搭建
+    RayCluster CRD 提供 pod 的恢复能力以及集群粒度的热更新，
+    head 和 worker 通过 service 进行连接，通过将集群 metadata 挂到远程存储中，
+    配合 service 可以做到无感知的 head 节点恢复，
+
+RayJob：负责提交作业到一个伴生集群中，并同步状态
+RaySevice：负责将 RayServe 应用快速部署到云原生环境中
+在 operator 实现中，cluster 的 controller 更侧重集群的拉起、恢复、与 Ray autoscaler 配合等，Job Service 的 controller 侧重作业提交和状态更新，并且它俩分别对应了离线和在线两个典型场景。
+除此之外 KubeRay 还提供了 APIServer 等 client 库来负责 CRD 的增删改差，方便对接上层平台。

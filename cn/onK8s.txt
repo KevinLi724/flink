@@ -1,3 +1,40 @@
 https://www.infoq.cn/article/leekgketvkyte33rkjh0
 
 https://www.infoq.cn/article/ufefrdqslqi3hyrhbpnm
+k8s operator 是用于特定应用的控制器，代表用户创建，配置和管理复杂应用实例。
+原理：通过自定义资源定义（CRD）扩展k8sapi，对应用和服务自动化的管理。operator会监控和响应
+k8s集群的事件，根据预定义的规则和策略自动执行特定的操作。比如创建，更新，删除等操作。
+优势：
+1. 快速一键自动化部署项目
+2. 自动化部署和管理作业的集群资源
+3. 监听各个组件的状态，异常检测
+4. 实现作业的弹性扩缩容，版本升级等热部署等。
+
+应用的基本步骤：
+1. 定义operator应用程序：编写crd，描述要管理的应用程序, 描述资源有什么属性，类型，结构。
+    主要包括APIVersion，kind，metadata和spec四个部分，关键是apiversion（资源所属组织和版本）；
+    kind表示资源类型。
+    spec定义进程主类，master，driver，worker的jvm参数，核数，内存等指标。
+2. 创建controller：控制器处理自定义资源，监听资源的更改，定义处理规则和策略执行对应的操作。
+3. 编写处理规则
+4. 创建pod，可以是一个或多个容器。
+5. 测试和部署
+
+operator工作流程：
+监听 CR 变化： Operator 通过监听自定义资源（CR）的变化来感知用户的操作。
+解析 CR： 当 CR 发生变化时，Operator 解析 CR 的规范（Spec）和状态（Status）。
+执行操作： Operator 根据 CR 中定义的规范执行相应的操作，这可能涉及创建、更新或删除资源。
+更新状态： 执行完操作后，Operator 更新 CR 的状态，将执行结果反映到 CR 的状态字段中。
+循环监听： Operator 不断循环监听 CR 的变化，保持对应用程序状态的同步。
+角色组件：
+Reflector：
+  通过List、Watch函数监控APIserver中指定类型的资源对象；
+  收到资源变动通知，基于Listing API获取资源变动信息，放置在由watchHandler函数定义的DeIta FIFO队列中
+
+Informer：基于事件轮训 从Delta FIFO队列中取出（POP）对象缓存至本地，将传递给控制器
+Indexer： 索引器，负责索引本地的资源对象。
+Resource Event Handlers：需要传递对象给自定义控制器时调用的回调函数，负责从Informer接收待处理资源对象的key，并存入Workqueue中
+Workqueue：用户在自定义控制器中消息队列，从Resource Event Handlers接收和缓冲待处理的资源对象，并交由Process Item进行处理，从而将对象接收和处理的过程解耦。
+Process Item：执行资源对象管理操作的业务逻辑，通常由一到多个函数组成，从Workqueue中取出对象并完成真正的处理过程。
+
+

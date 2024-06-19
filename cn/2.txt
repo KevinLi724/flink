@@ -1,0 +1,23 @@
+1. 作业管理平台向集群提交一个job CR
+2. operator 监听CR的创建和变更事件：
+    如果当前cr是初始状态，并行执行如下内容：
+        1. 主线程，创建所有的k8s资源，
+            从CR中获取作业各个参数，通过k8s客户端创建master driver containter等资源
+            创建完成后，作业更新为submitted
+        2. 独立线程池，负责下载jar包和运行主函数
+            从CR中获取镜像名，引擎版本，执行主类，下载引擎jar包
+            通过processBuilder的方式，拉起java进程，执行主类main函数，向driver提交pipeline任务。
+              （Operator需要依赖jdk11，因此需要单独拉一个jdk8的进程，避免直接反射）
+            主类运行成功后，作业更新为running；如果失败，作业更新为failed，清除k8s资源。
+
+    如果当前cr是running状态：
+        监听检查master service是否存在
+        监听检查container数量是否符合要求，缺失的话，会根据fo策略拉起一个新的container pod。
+
+
+operator只负责拉起一个pod，其余的pod是我们引擎负责拉起的：
+1. operator创建一个cliendPod，运行用户主函数
+2. clientPod创建master service/deployment, 拉起master服务
+3. master初始化，拉起若干的containter Pod和driver服务
+4. cliendPod将任务提交给driver
+

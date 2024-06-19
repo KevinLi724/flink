@@ -1,0 +1,78 @@
+一，standalone模式
+1. 客户端提交Flink任务，同时启动JobManager，客户端将任务转换成JobGraph提交给JobManager。
+2. Dispatcher启动JobMaster，Dispatcher将提交任务提交给JobMaster。
+3. JobMaster向ResourceManager申请Slot资源。
+4. 启动TaskManager，TaskManager会向ResourceManager注册Slot资源
+    ResourceManager会在对应的TaskManager上划分Slot资源。
+    TaskManager向JobMaster offer Slot资源。
+5.JobMaster将任务对应的task发送到TaskManager上执行。
+Standalone Session: 启动Flink集群时JobManager、TaskManager、JobMaster会预先启动.
+Standalone Application: 提交任务时同时启动集群JobManager、JobMaster，需要手动启动TaskManager。
+缺点：
+1. 资源浪费，作业间不隔离
+
+Native 的Session模式
+flink不直接负责资源管理，和k8s深度集成。
+创建master后，用户在client执行main class生成JObGraph，向SVC提交JobGraph，然后JObManager申请资源并运行作业到taskmanager。
+Native 的Application模式
+
+Native :通过底层的资源调度管理器，实现弹性扩缩容。
+1. 用户通过 Flink Client/CLI 启动作业。
+2. K8s 启动 JobManager（deployment）的同时启动作业，
+3. 通过 JobManager 内部的 K8sResourceManager 模块向 K8s 直接申请 TaskManager 的资源并启动，
+4. TM 注册到 JM 后作业就提交到 TM。用户无需指定 TaskManager 资源的数量，由 JobManager 向 K8s 按需申请的。
+
+源码流程：
+1. 通过bin/flink脚本，脚本入口是CliFrontend，有一个runapplication方法，拿到一个applicationDeployer,
+将启动参数比如用户代码入口类，用户配置转换为applicationConfiguration。
+deployer.run调用k8sclusetrClientFactory创建一个clusterDescriptor，初始化k8s资源后调用k8s client部署集群。
+KubernetesClusterDescriptor.deployClusterInternal构造 JobManager 的 Specification，通过fabric8io/kubernetes-client1提交到对应的 K8S 集群。
+Specification 里指定了 JobManager 的入口类：
+kubernetes.internal.jobmanager.entrypoint.class: KubernetesApplicationClusterEntrypoint
+
+2. 运行JobManager
+JobManager pod的启动脚本是docker-entrypoint.sh
+运行的是KubernetesApplicationClusterEntrypoint方法
+获取PackagedProgram：封装了用户代码相关，例如入口类、参数、用户 jar、classpath 等
+    Per-Job Mode，PackagedProgram是在 client 端生成的。 Application Mode，PackagedProgram在 JM 生成。
+    invokeInteractiveModeForExecution即调用用户的入口类 main 方法。
+runClusterEntrypoint调用runCluster：启动 JobManager，包含各类 Server，运行用户代码，同时申请 TaskManager 资源以及初始化
+    // 启动 commonRpcService(akka)、haServices、
+    // blobServer(存储例如 JobGraph 里的 jar 包，能够被 JobManager、TaskManager 访问)、
+    // heartbeatServices、metricRegistry(metrics reporter初始化)
+    // 端口号占用：blobServer、akka*2、rest
+    initializeServices(...)
+    // 创建 dispatcher resource-manager 等组件
+
+    create主要做了3件事情：
+    创建 webMonitorEndpoint，提供 Restful API 响应
+    创建 ResourceManager，负责跟 RP(YARN/K8S) 申请资源、管理及释放
+
+          1. startHeartbeatServices: 开启 jm tm 心跳
+          2. slotManager.start: 申请 TaskManager 资源
+              在这里会创建TaskManager的
+
+    创建 DispatcherRunner，负责启动 Dispatcher，该类提供了submitJob(JobGraph jobGraph, Time timeout)负责作业的启动和分发
+
+Dispatcher最重要的一个方法submitJob(JobGraph jobGraph, Time timeout)
+  启动一个JobManagerRunnerImpl，内部是jobmasterService，调用start方法，就开始调度任务dag
+  JobGraph 转换为真正可以执行的 ExecutionGraph，JobMaster 以此将 DAG 调度到不同的 TaskManager 上。
+
+3. 运行TaskManager
+  JobManager 的SlotManagerImpl.start方法里，会调用ActiveResourceManager.requestNewWork，使用对应的ResourceManagerDriver启动 TaskManager.
+  对于 K8S 环境，/docker-entrypoint.sh 的入口类是KubernetesTaskExecutorRunner
+
+TaskManagerRunner负责启动 akka system、metrics reporter、blobCacheService 等服务，同时启动TaskExecutor：
+  连接 ResourceManager，注册自身TaskExecutorRegistration：connectToResourceManager
+  连接成功后，发送 SlotReport 到 RM 汇报 slot 情况：establishResourceManagerConnection
+  RM 收到请求后，在 class SlotManagerImpl 的方法里 RPC 调用 gateway.requestSlot
+  TM 在 requestSlot 方法里，连接 JobMaster，发送 SlotOffer 到 JM：registerNewJobAndCreateServices
+  JM 收到 SlotOffer 后，调用taskManagerGateway.submitTask(deployment)给 TM 分配任务
+  TM 在 submitTask 方法里，解析出 JobInformation TaskInformation，
+  比如这里的入口类可能是org.apache.flink.streaming.runtime.tasks.SourceStreamTask，创建Task 对象，启动工作线程task.startTaskThread
+  至此，TaskManager 开始执行用户代码的实现。
+
+
+
+
+
