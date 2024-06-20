@@ -1,6 +1,17 @@
 https://www.infoq.cn/article/leekgketvkyte33rkjh0
 
 https://www.infoq.cn/article/ufefrdqslqi3hyrhbpnm
+Kubernetes（k8s）中的 Master 节点，负责管理整个集群，含有一个集群的资源数据访问入口，还包含一个 Etcd 高可用键值存储服务。Master 中运行着 API Server，Controller Manager 及 Scheduler 服务。
+Node 为集群的一个操作单元，是 Pod 运行的宿主机。Node 节点里包含一个 agent 进程，能够维护和管理该 Node 上的所有容器的创建、启停等。Node 还含有一个服务端 kube-proxy，用于服务发现、反向代理和负载均衡。Node 底层含有 docker engine，docker 引擎主要负责本机容器的创建和管理工作。
+Pod 运行于 Node 节点上，是若干相关容器的组合。在 K8s 里面 Pod 是创建、调度和管理的最小单位。
+
+Replication Controller (RC) 用来管理 Pod 的副本。
+    任何时候 Kubernetes 集群中有指定数量的 pod 副本(replicas) 在运行， 如果少于指定数量的 pod 副本，RC 会启动新的 Container，反之会杀死多余的以保证数量不变。
+Service 提供了一个统一的服务访问入口以及服务代理和发现机制
+Persistent Volume(PV) 和 Persistent Volume Claim(PVC) 用于数据的持久化存储。
+ConfigMap 是指存储用户程序的配置文件，其后端存储是基于 Etcd。
+
+
 k8s operator 是用于特定应用的控制器，代表用户创建，配置和管理复杂应用实例。
 原理：通过自定义资源定义（CRD）扩展k8sapi，对应用和服务自动化的管理。operator会监控和响应
 k8s集群的事件，根据预定义的规则和策略自动执行特定的操作。比如创建，更新，删除等操作。
